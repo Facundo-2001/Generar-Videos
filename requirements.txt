@@ -1,0 +1,8 @@
+python-dotenv
+openai
+elevenlabs
+google-genai
+groq
+moviepy
+edge-tts
+apify-client
