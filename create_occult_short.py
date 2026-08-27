@@ -25,8 +25,9 @@ from videogen.providers.openrouter_script import OpenRouterScriptProvider
 from videogen.providers.text_timing_subtitles import TextTimingSubtitleProvider
 
 OCCULT_PROMPT_TEMPLATE = """Escribi el guion de un short vertical (YouTube Shorts/TikTok/Reels, ~60 \
-segundos de narracion hablada, entre 140 y 170 palabras) sobre el siguiente tema, con estilo canal \
-de ocultismo / misterio / teorias conspirativas: {topic}
+segundos de narracion hablada, entre 105 y 120 palabras -no mas- porque la voz narra pausada y \
+grave) sobre el siguiente tema, con estilo canal de ocultismo / misterio / teorias conspirativas: \
+{topic}
 
 TONO Y ESTILO:
 - Narrador serio, grave, pausado e intrigante, como un documental de misterios/conspiraciones. Nada \

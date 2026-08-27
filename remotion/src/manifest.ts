@@ -3,6 +3,7 @@ export type SceneManifest = {
   start: number;
   duration: number;
   highlight?: boolean;
+  overlayText?: string | null;
   sfx?: string | null;
 };
 

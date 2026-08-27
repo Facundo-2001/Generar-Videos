@@ -24,6 +24,15 @@ DARK_VOICE_SETTINGS = VoiceSettings(
     use_speaker_boost=True,
 )
 
+# Entrega mas rapida y expresiva, para pitches de venta/UGC tipo reel de marketing.
+ENERGETIC_VOICE_SETTINGS = VoiceSettings(
+    stability=0.40,
+    similarity_boost=0.85,
+    style=0.55,
+    speed=1.05,
+    use_speaker_boost=True,
+)
+
 _MIN_MUSIC_S = 10.0
 _MAX_MUSIC_S = 300.0
 

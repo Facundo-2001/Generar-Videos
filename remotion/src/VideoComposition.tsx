@@ -1,6 +1,7 @@
 import React from "react";
 import { AbsoluteFill, Audio, Sequence, staticFile } from "remotion";
 import { SceneImage } from "./components/SceneImage";
+import { SceneOverlayText } from "./components/SceneOverlayText";
 import { Captions } from "./components/Captions";
 import { ClosingCard } from "./components/ClosingCard";
 import { HighlightSweep } from "./components/HighlightSweep";
@@ -29,6 +30,7 @@ export const VideoComposition: React.FC<{
               durationInFrames={durationFrames}
             />
             {scene.highlight && <HighlightSweep fps={fps} />}
+            {scene.overlayText && <SceneOverlayText text={scene.overlayText} />}
             {scene.sfx && (
               <Sequence from={Math.round(fps * 0.25)}>
                 <Audio src={staticFile(base + scene.sfx)} volume={0.7} />

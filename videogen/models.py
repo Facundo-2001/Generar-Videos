@@ -26,6 +26,7 @@ class Scene:
     duration_s: float
     visual_path: Path | None = None
     highlight: bool = False
+    overlay_text: str | None = None
     sfx_prompt: str | None = None
     sfx_path: Path | None = None
 

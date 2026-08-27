@@ -63,6 +63,7 @@ def write_manifest(
                 "start": t,
                 "duration": duration,
                 "highlight": scene.highlight,
+                "overlayText": scene.overlay_text,
                 "sfx": scene.sfx_path.name if scene.sfx_path else None,
             }
         )

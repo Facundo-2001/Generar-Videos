@@ -23,7 +23,7 @@ from videogen.providers.base import (
 class VideoOrchestrator:
     def __init__(
         self,
-        script_provider: ScriptProvider,
+        script_provider: ScriptProvider | None,
         visual_provider: VisualProvider,
         voice_provider: VoiceProvider,
         subtitle_provider: SubtitleProvider,
@@ -64,8 +64,10 @@ class VideoOrchestrator:
             if script_text is not None and scenes is not None:
                 project.script_text = script_text
                 project.scenes = scenes
-            else:
+            elif self.script_provider is not None:
                 project.script_text, project.scenes = self.script_provider.generate_script(topic)
+            else:
+                raise ValueError("Falta script_provider, o pasar script_text y scenes ya armados")
             project.status = Status.SCRIPT_READY
 
             for scene in project.scenes:
