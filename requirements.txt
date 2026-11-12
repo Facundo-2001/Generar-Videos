@@ -6,3 +6,7 @@ groq
 moviepy
 edge-tts
 apify-client
+requests
+pillow
+fastapi
+uvicorn[standard]

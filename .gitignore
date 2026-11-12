@@ -9,3 +9,6 @@ remotion/node_modules/
 remotion/out/
 remotion/public/renders/*
 !remotion/public/renders/.gitkeep
+
+web/node_modules/
+web/dist/
