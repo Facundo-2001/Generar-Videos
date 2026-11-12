@@ -3,7 +3,9 @@
 Pipeline para producir videos verticales (9:16, estilo Reels / TikTok / Shorts) a partir de un tema
 o de un guion escrito a mano, combinando varios servicios de IA.
 
-El sistema se maneja **por terminal** y tiene dos etapas:
+Se puede usar de tres formas: una **pagina web**, un **asistente que te pregunta todo por
+terminal**, o los **comandos sueltos**. Por debajo las tres usan el mismo motor, que tiene dos
+etapas:
 
 1. **Python** genera los assets (guion, imagenes, voz, musica, efectos, subtitulos) y escribe un
    `manifest.json` que describe el video.
@@ -25,6 +27,12 @@ pip install -r requirements.txt
 # Dependencias de Remotion (una sola vez)
 cd remotion
 npm install
+cd ..
+
+# Dependencias de la pagina web (solo si vas a usar la interfaz web)
+cd web
+npm install
+npm run build
 cd ..
 ```
 
@@ -51,7 +59,64 @@ Copia `.env.example` a `.env` y completa solo las claves de los servicios que va
 
 ---
 
-## 2. Uso rapido
+## 2. La pagina web (la forma principal de usarlo)
+
+Levanta el servidor y abri la pagina. Desde ahi elegis los proveedores con un clic, escribis el
+guion (o se lo dejas a la IA), y ves el progreso en vivo hasta que aparece el video listo para
+reproducir y descargar.
+
+```bash
+python api.py
+# despues abri http://127.0.0.1:8000
+```
+
+Para publicarla en internet (front en Vercel, backend en Railway/Render/Fly), esta todo listo y los
+pasos estan en **[DEPLOY.md](DEPLOY.md)**.
+
+La pagina te deja:
+
+- Elegir entre **modo prueba** (gratis, sin APIs) y **modo real**.
+- Ver cada proveedor con su etiqueta de **gratis** o **pago**. Los que necesitan una API key que no
+  tenes en el `.env` aparecen deshabilitados, con el nombre de la variable que falta.
+- Pedirle el guion a la IA, o escribirlo vos y armar las escenas una por una (descripcion de la
+  imagen, duracion, texto en pantalla y efecto de sonido), agregando y quitando escenas a mano.
+- Seguir el pipeline paso a paso (guion → imagenes → voz → musica → subtitulos → render) con el log
+  en vivo, y descargar el MP4 al final.
+
+Para trabajar sobre el codigo de la pagina con recarga automatica, en otra terminal:
+
+```bash
+cd web
+npm run dev          # http://localhost:5173, proxea /api hacia el puerto 8000
+```
+
+Cuando termines de editarla, `npm run build` deja el resultado en `web/dist/`, que es lo que
+`api.py` sirve directamente en el puerto 8000.
+
+### Protegerla con una clave
+
+Si el backend va a estar expuesto en internet, defini `APP_TOKEN` en el `.env`. Con eso la API
+rechaza todo pedido sin esa clave, y la web la pide una vez y la recuerda en el navegador. Sin
+clave, cualquiera que llegue a la URL puede gastarte los creditos de las APIs.
+
+---
+
+## 3. El asistente por terminal
+
+Si preferis no abrir el navegador, `asistente.py` hace las mismas preguntas en la consola y termina
+ofreciendote renderizar el MP4:
+
+```bash
+python asistente.py
+```
+
+Te va preguntando de a una cosa: modo, tema, quien escribe el guion, proveedores, escenas, texto de
+cierre. Enter siempre toma la opcion por defecto, asi que se puede atravesar entero a los enters
+para una prueba rapida.
+
+---
+
+## 4. Los comandos sueltos
 
 ### Paso 1: generar los assets
 
@@ -95,7 +160,7 @@ El video queda en `remotion/out/`.
 
 ---
 
-## 3. Opciones de `main.py`
+## 5. Opciones de `main.py`
 
 ```
 python main.py "TEMA" [--real] [--visuals ...] [--voice ...] [--energetic-voice] [--music ...] [--sfx ...]
@@ -112,7 +177,7 @@ python main.py "TEMA" [--real] [--visuals ...] [--voice ...] [--energetic-voice]
 
 **Ojo:** el guion generado por LLM (`--real`) no define `sfx_prompt` ni `overlay_text`, asi que
 `--sfx elevenlabs` no hara nada por esa via. Los efectos y los textos en pantalla se usan desde los
-scripts dedicados (ver seccion 4).
+scripts dedicados (ver seccion 6).
 
 ### Combinaciones utiles
 
@@ -132,7 +197,7 @@ python main.py "mi tema" --real --visuals kieai --voice elevenlabs --music kieai
 
 ---
 
-## 4. Scripts dedicados
+## 6. Scripts dedicados
 
 Ademas de `main.py` hay scripts con el guion, los prompts de imagen, los textos en pantalla y los
 efectos ya escritos a mano. Dan mucho mas control que el LLM y se corren sin argumentos:
@@ -169,7 +234,7 @@ del tiempo entre escenas.
 
 ---
 
-## 5. Que hay dentro de cada proyecto
+## 7. Que hay dentro de cada proyecto
 
 Cada corrida crea `remotion/public/renders/<id>/` con:
 
@@ -189,11 +254,20 @@ ajustar algo chico (correr un subtitulo, cambiar un texto en pantalla, acortar u
 
 ---
 
-## 6. Como esta armado el codigo
+## 8. Como esta armado el codigo
 
 ```
+Dockerfile                  imagen del backend para produccion
+DEPLOY.md                   como publicarlo (Vercel + Railway/Render/Fly)
+api.py                      backend web (FastAPI) que usa el mismo pipeline
+asistente.py                asistente interactivo por terminal
 main.py                     CLI principal
 create_*.py                 scripts con guion escrito a mano
+web/
+  src/App.tsx               la landing page entera (formulario + progreso)
+  src/api.ts                tipos y llamadas al backend
+  vercel.json               configuracion del deploy en Vercel
+  dist/                     build que sirve api.py en el puerto 8000
 videogen/
   config.py                 lee el .env
   models.py                 Scene, VideoProject, Status
@@ -218,7 +292,12 @@ con el mensaje en `project.error`, y `main.py` lo imprime y sale con codigo 1.
 
 Cada categoria de proveedor es una interfaz abstracta, asi que agregar un servicio nuevo es escribir
 una clase en `videogen/providers/` que implemente el metodo correspondiente de `base.py` y
-engancharla en la funcion `_build_*_provider` de `main.py`.
+engancharla en la funcion `_build_*_provider` de `main.py`. Para que aparezca en la pagina web,
+sumalo ademas al diccionario `PROVIDERS` de `api.py`: la UI se dibuja sola a partir de ese catalogo.
+
+La pagina web y el asistente no duplican logica: los dos arman el mismo `VideoOrchestrator` llamando
+a `construir_orquestador()` de `asistente.py`. El orquestador acepta un callback `on_event` opcional,
+que es como el backend reporta el progreso en vivo.
 
 Los subtitulos, por defecto, **no** se transcriben del audio: se calculan a partir del texto del
 guion, repartiendo el tiempo por cantidad de caracteres. Es a proposito, para que nombres propios y
@@ -227,7 +306,14 @@ transcripcion con Whisper (`groq_subtitles.py`) sigue disponible si alguna vez l
 
 ---
 
-## 7. Problemas comunes
+## 9. Problemas comunes
+
+**La pagina web dice "No se pudo hablar con el backend"**
+El servidor no esta levantado o esta en otro puerto. Corre `python api.py` y recarga.
+
+**Abro http://127.0.0.1:8000 y veo un 404**
+Falta compilar la pagina: `cd web && npm install && npm run build`. `api.py` sirve `web/dist/`, y
+solo la monta si esa carpeta existe cuando arranca, asi que despues de compilar hay que reiniciarlo.
 
 **`Faltan variables de entorno en .env: ...`**
 Falta una clave en `.env`. El mensaje dice cual.
@@ -239,6 +325,16 @@ Studio.
 **`TimeoutError: trying to connect to the browser` al renderizar**
 Ya esta contemplado en `remotion/remotion.config.ts` (fuerza IPv4). Si igual pasa, verifica que el
 Chrome de Remotion este instalado: `npx remotion browser ensure`.
+
+**Pollinations tarda mucho / avisa "limite del tier gratuito"**
+Es normal. El tier anonimo permite 1 imagen cada ~45 segundos por IP, asi que un video de 5 escenas
+tarda unos 3-4 minutos solo en las imagenes. El provider espera y reintenta solo; no hace falta
+hacer nada. Si necesitas que sea rapido, usa `--visuals kieai` (pago) o conseguite una pollen key
+gratuita en https://enter.pollinations.ai.
+
+**`403, message='Invalid response status'` al generar la voz con Edge-TTS**
+Microsoft bloquea las versiones viejas de la libreria. Se arregla actualizandola:
+`pip install --upgrade edge-tts`.
 
 **Las imagenes de Pollinations salen pobres o genericas**
 Es el costo de ser gratis. Para calidad de produccion usa `--visuals kieai`, o escribi los prompts a
